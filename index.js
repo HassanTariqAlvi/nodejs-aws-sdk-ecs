@@ -3,7 +3,7 @@ const AWS = require('aws-sdk');
 const axios = require('axios');
 require('dotenv').config();
 
-
+// env file should be there in docker, with empty variables-key
 AWS.config.update({
   region: process.env.AWS_REGION,
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -12,15 +12,12 @@ AWS.config.update({
 
 
 const ecs = new AWS.ECS({apiVersion: '2014-11-13'});
-
 const app = express();
 const port = 3000;
 
-//ADED for 2nd task
-
-
 app.use(express.json());
 
+// For Checking the cluster, during runtime -- verify
 app.get('/task-metadata', async (req, res) => {
   try {
       const response = await axios.get('http://169.254.170.2/v2/metadata');
@@ -30,6 +27,8 @@ app.get('/task-metadata', async (req, res) => {
   }
 });
 
+// Should be called by DI-Bot Scraping-API with post request when it's done with Scraping 
+// It will distroy the task in ECS Fargate in which this code be running
 app.post('/stop-task', async (req, res) => {
   try {
       // Fetch ECS task metadata
@@ -53,7 +52,8 @@ app.post('/stop-task', async (req, res) => {
   }
 });
 
-
+// It's only to test if we make a get request to this API, it'll destroy the Running Task in ECS Fargate
+// by making a post request to /stop-task local API
 app.get('/end-myself', async (req, res) => {
   try {
     // Making a POST request to the /stop-task endpoint
@@ -68,9 +68,7 @@ app.get('/end-myself', async (req, res) => {
 });
 
 
-//ADED for 2nd task
-
-
+// Update the ECS-Fargate Service Count 
   function updateECSService(desiredCount) {
    const params = {
     cluster: process.env.ECS_CLUSTER,
@@ -86,13 +84,13 @@ app.get('/end-myself', async (req, res) => {
   });
 }
 
-
+// Increase Task-Count to 3
 app.get('/start', (req, res) => {
   updateECSService(3);
   res.send('Task count increased to 3');
 });
 
-
+// Decrease Task-Count to 1
 app.get('/end', (req, res) => {
   updateECSService(1); //
   res.send('Task count decreased to 1');
