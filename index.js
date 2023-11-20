@@ -96,6 +96,28 @@ app.get('/end', (req, res) => {
   res.send('Task count decreased to 1');
 });
 
+// Get the Current running  tasks
+
+function getRunningTasksCount() {
+  const params = {
+    cluster: process.env.ECS_CLUSTER,
+    services: [process.env.ECS_SERVICE],
+  };
+
+  ecs.describeServices(params, function(err, data) {
+    if (err) {
+      console.error("Error", err);
+    } else {
+      const runningCount = data.services[0].runningCount;
+      console.log(`Currently running ${runningCount} tasks for service ${process.env.ECS_SERVICE}`);
+    }
+  });
+}
+
+app.get('/current-task', (req, res) => {
+  getRunningTasksCount(); 
+});
+
 // Start the server
 app.listen(port, () => {
   console.log(`ECS API running on http://localhost:${port}`);
